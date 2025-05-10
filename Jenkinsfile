@@ -51,7 +51,7 @@ pipeline {
             environment {
                 VM_USER = 'bright'
                 VM_HOST = '192.168.168.129'
-                VM_DIR  = '/home/bright/mywedapp'
+                VM_DIR  = '/home/bright/mywedapp/mywedapp'
             }
             steps {
                 sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
