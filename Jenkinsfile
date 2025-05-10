@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Greeting') {
             steps {
-                echo 'hello, devops team from bright'
+                echo 'hello, devops team from opara bright'
             }
         }
 
