@@ -33,11 +33,11 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    script {
-                        sh """
+                    withEnv(["IMAGE_TAG=${DOCKER_IMAGE_NAME}:${TAG}"]) {
+                        sh '''
                             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                            docker push ${DOCKER_IMAGE_NAME}:${TAG}
-                        """
+                            docker push "$IMAGE_TAG"
+                        '''
                     }
                 }
             }
