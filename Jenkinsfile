@@ -6,7 +6,6 @@ pipeline {
         DOCKERFILE_PATH = './Dockerfile'
         DOCKER_REGISTRY = 'docker.io'
         DOCKER_CREDENTIALS_ID = 'docker_credentials_id'
-        SNYK_TOKEN = credentials('snyk-api-token')
     }
 
     stages {
@@ -20,9 +19,26 @@ pipeline {
 
         stage('Scanning Image with Snyk') {
             steps {
-                withEnv(["SNYK_TOKEN=${SNYK_TOKEN}"]) {
-                    sh 'snyk auth $SNYK_TOKEN'
-                    sh "snyk test --docker ${dockerImage.imageName} || true"
+                withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
+                    sh 'snyk auth $SNYK_TOKEN || true'
+                    sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG} || true"
+                }
+            }
+        }
+
+        stage('Pushing Image to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: "${DOCKER_CREDENTIALS_ID}",
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    script {
+                        sh """
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push ${DOCKER_IMAGE_NAME}:${TAG}
+                        """
+                    }
                 }
             }
         }
