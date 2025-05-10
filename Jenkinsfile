@@ -55,14 +55,15 @@ pipeline {
             }
             steps {
                 sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
-                            cd $VM_DIR &&
+                    sh """
+                        ssh -o StrictHostKeyChecking=no \$VM_USER@\$VM_HOST '
+                            cd \$VM_DIR &&
+                            ls -l &&
                             docker-compose pull &&
                             docker-compose down &&
                             docker-compose up -d
                         '
-                    '''
+                    """
                 }
             }
         }
