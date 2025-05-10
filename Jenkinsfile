@@ -10,19 +10,21 @@ pipeline {
     }
 
     stages {
-        stage ('Building Stage') {
+        stage('Building Stage') {
             steps {
                 script {
                     dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${TAG}")
                 }
             }
         }
-        stage ('Scanning Image with Snyk') {
+
+        stage('Scanning Image with Snyk') {
             steps {
-                sh "snyk auth $SNYK_TOKEN"
-                sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG} || true"
+                withEnv(["SNYK_TOKEN=${SNYK_TOKEN}"]) {
+                    sh 'snyk auth $SNYK_TOKEN'
+                    sh "snyk test --docker ${dockerImage.imageName} || true"
+                }
             }
         }
     }
-
 }
