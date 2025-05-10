@@ -13,14 +13,14 @@ pipeline {
         stage ('Building Stage') {
             steps {
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}")
+                    dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${TAG}")
                 }
             }
         }
         stage ('Scanning Image with Snyk') {
             steps {
-                sh 'snyk auth $SNYK_TOKEN'
-                sh 'snyk test --docker ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} || true'
+                sh "snyk auth $SNYK_TOKEN"
+                sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG} || true"
             }
         }
     }
