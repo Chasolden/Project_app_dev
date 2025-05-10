@@ -22,7 +22,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
                     sh 'snyk auth $SNYK_TOKEN || true'
-                    sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG} || true"
+                    sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG}"
                 }
             }
         }
