@@ -6,6 +6,7 @@ pipeline {
         DOCKERFILE_PATH = './Dockerfile'
         DOCKER_REGISTRY = 'docker.io'
         DOCKER_CREDENTIALS_ID = 'docker_credentials_id'
+        SSH_CREDENTIALS_ID = 'bright-ssh-creds-id'
     }
 
     stages {
@@ -39,6 +40,26 @@ pipeline {
                             docker push "$IMAGE_TAG"
                         '''
                     }
+                }
+            }
+        }
+
+        stage('Deploy to Remote VM') {
+            environment {
+                VM_USER = 'bright'
+                VM_HOST = '192.168.168.129'
+                VM_DIR  = '/home/bright/mywedapp'
+            }
+            steps {
+                sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
+                            cd $VM_DIR &&
+                            docker-compose pull &&
+                            docker-compose down &&
+                            docker-compose up -d
+                        '
+                    '''
                 }
             }
         }
