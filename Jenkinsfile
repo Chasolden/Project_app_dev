@@ -57,7 +57,7 @@ pipeline {
                 sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
                     sh """
                         ssh -o StrictHostKeyChecking=no \$VM_USER@\$VM_HOST '
-                            cd \$VM_DIR &&
+                            cd /home/bright/mywedapp &&
                             ls -l &&
                             docker-compose pull &&
                             docker-compose down &&
