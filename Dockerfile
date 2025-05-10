@@ -1,6 +1,3 @@
-FROM ubuntu
-RUN apt-get update -y && apt-get install nginx -y && service nginx start
-COPY wedding-website/ /var/www/html/
+FROM nginx:alpine
+COPY wedding-website/ /usr/share/nginx/html
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-
