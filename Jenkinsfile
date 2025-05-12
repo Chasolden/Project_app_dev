@@ -38,12 +38,35 @@ pipeline {
         stage('Scanning Image with Snyk') {
             steps {
                 withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
-                    sh 'snyk auth $SNYK_TOKEN || true'
+                    sh 'snyk auth $SNYK_TOKEN'
                     sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG} --file=${DOCKERFILE_PATH}"
                 }
             }
         }
 
+        // Deploy to Remote VM first
+        stage('Deploy to Remote VM') {
+            environment {
+                VM_USER = 'bright'
+                VM_HOST = '192.168.168.129'
+                VM_DIR  = '/home/bright/mywedapp/mywedapp'
+            }
+            steps {
+                sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no \$VM_USER@\$VM_HOST '
+                            cd /home/bright/mywedapp &&
+                            ls -l &&
+                            docker-compose pull &&
+                            docker-compose down &&
+                            docker-compose up -d
+                        '
+                    """
+                }
+            }
+        }
+
+        // Now deploy to Kubernetes
         stage('Deploy to Kubernetes') {
             steps {
                 script {
@@ -65,27 +88,6 @@ pipeline {
                 script {
                     // Rollback to the previous deployment in case of failure
                     sh 'kubectl rollout undo deployment/mywedapp'
-                }
-            }
-        }
-
-        stage('Deploy to Remote VM') {
-            environment {
-                VM_USER = 'bright'
-                VM_HOST = '192.168.168.129'
-                VM_DIR  = '/home/bright/mywedapp/mywedapp'
-            }
-            steps {
-                sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no \$VM_USER@\$VM_HOST '
-                            cd /home/bright/mywedapp &&
-                            ls -l &&
-                            docker-compose pull &&
-                            docker-compose down &&
-                            docker-compose up -d
-                        '
-                    """
                 }
             }
         }
