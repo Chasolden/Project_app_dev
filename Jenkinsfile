@@ -1,4 +1,4 @@
-@Library('my-shared-library') _  // This Import the shared library
+@Library('my-shared-library') _  // Import the shared library
 
 pipeline {
     agent any
@@ -12,20 +12,27 @@ pipeline {
     }
 
     stages {
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    // Use shared library function to build and push the Docker image
+                    buildAndPushImage(dockerImage: DOCKER_IMAGE_NAME, tag: TAG, registry: DOCKER_REGISTRY, credentialsId: DOCKER_CREDENTIALS_ID)
+                }
+            }
+        }
+
+        stage('Verify Docker Image') {
+            steps {
+                // Verify that the image is built successfully and exists
+                sh 'docker images'
+            }
+        }
+
         stage('Scanning Image with Snyk') {
             steps {
                 withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
                     sh 'snyk auth $SNYK_TOKEN || true'
                     sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG}"
-                }
-            }
-        }
-
-        stage('Pushing Image to DockerHub') {
-            steps {
-                script {
-                    // Use shared library function to build and push the Docker image
-                    buildAndPushImage(dockerImage: DOCKER_IMAGE_NAME, tag: TAG, registry: DOCKER_REGISTRY, credentialsId: DOCKER_CREDENTIALS_ID)
                 }
             }
         }
