@@ -48,9 +48,9 @@ pipeline {
             steps {
                 script {
                     // Apply deployment, service, and HPA to Kubernetes
-                    sh 'kubectl apply -f k8s/deployment.yaml'
-                    sh 'kubectl apply -f k8s/service.yaml'
-                    sh 'kubectl apply -f k8s/hpa.yaml'
+                    sh 'kubectl apply -f k8s/mywed-deployment.yaml'
+                    sh 'kubectl apply -f k8s/mywed-service.yaml'
+                    sh 'kubectl apply -f k8s/horizontalpa.yaml'
                     sh 'kubectl rollout status deployment/mywedapp'
                     sh 'kubectl get pods'
                 }
