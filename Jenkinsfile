@@ -9,9 +9,16 @@ pipeline {
         DOCKER_REGISTRY = 'docker.io'
         DOCKER_CREDENTIALS_ID = 'docker_credentials_id'
         SSH_CREDENTIALS_ID = 'bright-ssh-creds-id'
+        K8S_NAMESPACE = 'default'
     }
 
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build and Push Docker Image') {
             steps {
                 script {
@@ -33,6 +40,31 @@ pipeline {
                 withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
                     sh 'snyk auth $SNYK_TOKEN || true'
                     sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG} --file=${DOCKERFILE_PATH}"
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    // Apply deployment, service, and HPA to Kubernetes
+                    sh 'kubectl apply -f k8s/deployment.yaml'
+                    sh 'kubectl apply -f k8s/service.yaml'
+                    sh 'kubectl apply -f k8s/hpa.yaml'
+                    sh 'kubectl rollout status deployment/mywedapp'
+                    sh 'kubectl get pods'
+                }
+            }
+        }
+
+        stage('Rollback to Previous Version') {
+            when {
+                expression { return currentBuild.result == 'FAILURE' }
+            }
+            steps {
+                script {
+                    // Rollback to the previous deployment in case of failure
+                    sh 'kubectl rollout undo deployment/mywedapp'
                 }
             }
         }
