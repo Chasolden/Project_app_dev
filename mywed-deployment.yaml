@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mywedapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mywedapp
+  template:
+    metadata:
+      labels:
+        app: mywedapp
+    spec:
+      containers:
+        - name: mywedapp-container
+          image: brightex99/mywedapp:latest
+          ports:
+            - containerPort: 80
+
