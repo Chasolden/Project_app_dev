@@ -1,4 +1,3 @@
-
 @Library('my-shared-library') _  // Import the shared library
 
 pipeline {
