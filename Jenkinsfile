@@ -44,29 +44,31 @@ pipeline {
             }
         }
 
-        // Deploy to Remote VM first
+        // Deploy to Remote VM
         stage('Deploy to Remote VM') {
-            environment {
-                VM_USER = 'bright'
-                VM_HOST = '192.168.168.129'
-                VM_DIR  = '/home/bright/mywedapp/mywedapp'
-            }
             steps {
-                sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no \$VM_USER@\$VM_HOST '
-                            cd /home/bright/mywedapp &&
-                            ls -l &&
-                            docker-compose pull &&
-                            docker-compose down &&
-                            docker-compose up -d
-                        '
-                    """
+                script {
+                    // Load env vars from file
+                    def envMap = readProperties file: '/etc/jenkins-envs/deploy_vm.env'
+                    def user = envMap.VM_USER
+                    def host = envMap.VM_HOST
+                    def dir  = envMap.VM_DIR
+
+                    sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ${user}@${host} '
+                                cd ${dir} &&
+                                ls -l &&
+                                docker-compose pull &&
+                                docker-compose down &&
+                                docker-compose up -d
+                            '
+                        """
+                    }
                 }
             }
         }
 
-        // Now deploy to Kubernetes
         stage('Deploy to Kubernetes') {
             steps {
                 script {
