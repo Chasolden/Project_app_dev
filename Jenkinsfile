@@ -44,7 +44,7 @@ pipeline {
             }
         }
 
-        // Deploy to Remote VM
+        // Deploying to Remote VM
         stage('Deploy to Remote VM') {
             steps {
                 script {
