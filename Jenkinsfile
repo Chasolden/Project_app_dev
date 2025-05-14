@@ -5,7 +5,7 @@ pipeline {
     agent any
     environment {
         DOCKER_IMAGE_NAME = 'brightex99/mywedapp'
-        TAG = "${BUILD_NUMBER}"
+        TAG = TAG = "${BUILD_NUMBER}-${env.GIT_COMMIT?.take(7)}"
         DOCKERFILE_PATH = './Dockerfile'
         DOCKER_REGISTRY = 'docker.io'
         DOCKER_CREDENTIALS_ID = 'docker_credentials_id'
