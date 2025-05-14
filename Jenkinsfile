@@ -50,7 +50,7 @@ pipeline {
         stage('Deploy to Remote VM') {
             environment {
                 VM_USER = 'bright'
-                VM_HOST = '192.168.168.129'
+                VM_HOST = '192.168.168.135'
                 VM_DIR  = '/home/bright/mywedapp/mywedapp'
             }
             steps {
