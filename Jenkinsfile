@@ -3,7 +3,6 @@ pipeline {
     agent any
     environment {
         DOCKER_IMAGE_NAME = 'brightex99/mywedapp'
-        TAG = "${BUILD_NUMBER}"
         DOCKERFILE_PATH = './Dockerfile'
         DOCKER_REGISTRY = 'docker.io'
         DOCKER_CREDENTIALS_ID = 'docker_credentials_id'
@@ -11,6 +10,16 @@ pipeline {
     }
 
     stages {
+        stage('Set Git Tag') {
+            steps {
+                script {
+                    // Truncate the Git commit to 8 characters and assign it to TAG
+                    env.TAG = GIT_COMMIT.take(8)
+                    echo "Using image tag: ${env.TAG}"
+                }
+            }
+        }
+        
         stage('Building Stage') {
             steps {
                 script {
