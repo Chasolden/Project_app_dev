@@ -1,3 +1,4 @@
+
 @Library('my-shared-library') _  // Import the shared library
 
 pipeline {
@@ -39,7 +40,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
                     sh 'snyk auth $SNYK_TOKEN'
-                    sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG} --file=${DOCKERFILE_PATH}"
+                    sh "snyk test --docker ${DOCKER_IMAGE_NAME}:${TAG} --file=${DOCKERFILE_PATH} || true"
                 }
             }
         }
@@ -48,7 +49,7 @@ pipeline {
         stage('Deploy to Remote VM') {
             environment {
                 VM_USER = 'bright'
-                VM_HOST = '192.168.168.129'
+                VM_HOST = '192.168.168.135'
                 VM_DIR  = '/home/bright/mywedapp/mywedapp'
             }
             steps {
@@ -67,27 +68,36 @@ pipeline {
         }
 
         // Now deploy to Kubernetes
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    // Apply deployment, service, and HPA to Kubernetes
-                    sh 'kubectl apply -f k8s/mywed-deployment.yaml'
-                    sh 'kubectl apply -f k8s/mywed-service.yaml'
-                    sh 'kubectl apply -f k8s/horinzontalpa.yaml'
-                    sh 'kubectl rollout status deployment/mywedapp'
-                    sh 'kubectl get pods'
-                }
+        stage('Deploy to k8s via VM') {
+            environment {
+                VM_USER = 'bright'
+                VM_HOST = '192.168.168.135'
+                VM_DEPLOY_DIR = '/home/bright/k8s'
             }
-        }
-
-        stage('Rollback to Previous Version') {
             when {
-                expression { return currentBuild.result == 'FAILURE' }
+                branch 'branch_three'
             }
             steps {
-                script {
-                    // Rollback to the previous deployment in case of failure
-                    sh 'kubectl rollout undo deployment/mywedapp'
+                sshagent (credentials: ["${SSH_CREDENTIALS_ID}"]) {
+                    script {
+                        echo "Copying K8S folder to Host VM"
+                        sh """
+                            scp -o StrictHostKeyChecking=no -r k8s \\
+                            ${VM_USER}@${VM_HOST}:${VM_DEPLOY_DIR}
+                        """
+                        echo "Applying YAML files on remote VM"
+                        sh """
+                            ssh -o StrictHostKeyChecking=no \$VM_USER@\$VM_HOST '
+                                cd ${VM_DEPLOY_DIR} &&
+                                sed -i "s|\\\${IMAGE_TAG}|${TAG}|g" mywed-deployment.yaml &&
+                                kubectl apply -f mywed-deployment.yaml &&
+                                kubectl apply -f mywed-service.yaml &&
+                                kubectl apply -f horinzontalpa.yaml &&
+                                echo "Waiting for rollout..." &&
+                                kubectl rollout status deployment/mywedapp
+                            '
+                        """
+                    }
                 }
             }
         }

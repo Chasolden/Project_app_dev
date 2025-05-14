@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: mywedapp-container
-          image: brightex99/mywedapp:latest
+          image: brightex99/mywedapp:${IMAGE_TAG}
           ports:
             - containerPort: 80
 
