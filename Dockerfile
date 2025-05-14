@@ -1,3 +1,3 @@
-FROM nginx:alpine@sha256:<latest-fixed-sha>
+FROM nginx:1.27.0-alpine
 COPY wedding-website/ /usr/share/nginx/html
 EXPOSE 80
