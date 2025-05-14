@@ -48,7 +48,7 @@ pipeline {
         stage('Deploy to Remote VM') {
             environment {
                 VM_USER = 'bright'
-                VM_HOST = '192.168.168.129'
+                VM_HOST = '192.168.168.135'
                 VM_DIR  = '/home/bright/mywedapp/mywedapp'
             }
             steps {
@@ -73,7 +73,7 @@ pipeline {
                     // Apply deployment, service, and HPA to Kubernetes
                     sh 'kubectl apply -f k8s/mywed-deployment.yaml'
                     sh 'kubectl apply -f k8s/mywed-service.yaml'
-                    sh 'kubectl apply -f k8s/horinzontalpa.yaml'
+                    sh 'kubectl apply -f k8s/horizontalpa.yaml'
                     sh 'kubectl rollout status deployment/mywedapp'
                     sh 'kubectl get pods'
                 }
