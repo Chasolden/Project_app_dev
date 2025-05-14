@@ -91,7 +91,7 @@ pipeline {
                                 sed -i "s|\\\${IMAGE_TAG}|${TAG}|g" mywed-deployment.yaml &&
                                 kubectl apply -f mywed-deployment.yaml &&
                                 kubectl apply -f mywed-service.yaml &&
-                                kubectl apply -f horinzontalpa.yaml &&
+                                kubectl apply -f horizontalpa.yaml &&
                                 echo "Waiting for rollout..." &&
                                 kubectl rollout status deployment/mywedapp
                             '
